@@ -1,9 +1,6 @@
 class Question {
-  String? questionText;
-  bool? questionAnswer;
+  final String questionText;
+  final bool questionAnswer;
 
-  Question({String? q,bool? a}) {
-    questionText = q;
-    questionAnswer = a;
-  }
+  const Question(this.questionText, this.questionAnswer);
 }

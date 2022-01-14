@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
-import 'quiz-brain.dart';
-// TODO 4: import rflutter package
+import 'quiz_brain.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 QuizBrain quizBrain = QuizBrain();
 
-void main() => runApp(Quizzler());
+void main() => runApp(const Quizzler());
 
 class Quizzler extends StatelessWidget {
+  const Quizzler({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        // TODO 6.ปรับปรุง UI ตามชอบ
-        backgroundColor: Colors.white,
-        body: SafeArea(
+        backgroundColor: Colors.grey[200],
+        appBar: AppBar(
+            centerTitle: true,
+            title: const Text(
+              "Quiz App",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
+            ),
+            backgroundColor: Colors.grey[850]),
+        body: const SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.0),
             child: QuizPage(),
@@ -25,37 +33,45 @@ class Quizzler extends StatelessWidget {
 }
 
 class QuizPage extends StatefulWidget {
+  const QuizPage({Key? key}) : super(key: key);
+
   @override
   _QuizPageState createState() => _QuizPageState();
 }
 
 class _QuizPageState extends State<QuizPage> {
-  //กำหนดให้ scoreKeeper เริ่มต้นเป็นลิสต์ว่าง
   List<Icon> scoreKeeper = [];
-  int totalScore = 0;
+  List<Icon> lastScoreKeeper = [];
+  int score = 0;
+  int lastScore = 0;
 
-  void checkAnswer(bool user_ans) {
-    bool correctAnswer = quizBrain.getQuestionAnswer()!;
-
-    // TODO 5: ปรับแก้โค้ดโดย ถ้าคำถามหมดแล้วให้ 1)โชว์ alert โดยใช้ rflutter_alert , 2) รีเซต questionNumber ให้เป็นศูนย์ด้วยเมธอด reset, 3) เซตให้ scoreKeeper เป็นลิสต์ว่าง และ 4) เซต totalScore ให้เป็นศูนย์
+  void checkAnswer(bool userAns) {
+    bool isCorrect = quizBrain.getQuestionAnswer() == userAns;
     setState(() {
-      if (correctAnswer == user_ans) {
-        //เพิ่มข้อมูลเข้าไปในลิสต์ scoreKeeper โดยใช้ add method
-        totalScore++;
+      if (isCorrect) {
+        score++;
         scoreKeeper.add(Icon(
           Icons.check,
-          color: Colors.green,
+          color: Colors.green[800],
         ));
-        quizBrain.nextQuestion();
       } else {
-        scoreKeeper.add(Icon(
+        scoreKeeper.add(const Icon(
           Icons.close,
           color: Colors.red,
         ));
-        quizBrain.nextQuestion();
+      }
+      // Next Question
+      quizBrain.nextQuestion();
+      if (quizBrain.isFinished()) {
+        Alert(context: context, title: "QuizApp", desc: "Out of question.")
+            .show();
+        quizBrain.reset();
+        lastScoreKeeper = scoreKeeper;
+        lastScore = score;
+        scoreKeeper = [];
+        score = 0;
       }
     });
-
   }
 
   @override
@@ -66,12 +82,12 @@ class _QuizPageState extends State<QuizPage> {
       children: <Widget>[
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                '$totalScore',
+                '$score',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 35.0,
                   color: Colors.black87,
                 ),
@@ -82,12 +98,12 @@ class _QuizPageState extends State<QuizPage> {
         Expanded(
           flex: 5,
           child: Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                quizBrain.getQuestionText()!,
+                quizBrain.getQuestionText(),
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 25.0,
                   color: Colors.black87,
                 ),
@@ -97,10 +113,10 @@ class _QuizPageState extends State<QuizPage> {
         ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(15.0),
+            padding: const EdgeInsets.all(15.0),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(primary: Colors.green),
-              child: Text(
+              child: const Text(
                 'True',
                 style: TextStyle(
                   color: Colors.white,
@@ -115,10 +131,10 @@ class _QuizPageState extends State<QuizPage> {
         ),
         Expanded(
           child: Padding(
-            padding: EdgeInsets.all(15.0),
+            padding: const EdgeInsets.all(15.0),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(primary: Colors.red),
-              child: Text(
+              child: const Text(
                 'False',
                 style: TextStyle(
                   fontSize: 20.0,
@@ -126,36 +142,34 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                // TODO 2: ปรับแก้โดยการเรียกใช้ฟังก์ชัน checkAnswer
-                bool? correctAnswer = quizBrain.getQuestionAnswer();
-                if (correctAnswer == false) {
-                  setState(() {
-                    //เมื่อกดปุ่ม False เพิ่มข้อมูลเข้าไปในลิสต์ scoreKeeper โดยใช้ add method
-                    totalScore++;
-                    scoreKeeper.add(Icon(
-                      Icons.check,
-                      color: Colors.green,
-                    ));
-
-                    quizBrain.nextQuestion();
-                  });
-                } else {
-                  setState(() {
-                    scoreKeeper.add(Icon(
-                      Icons.close,
-                      color: Colors.red,
-                    ));
-
-                    quizBrain.nextQuestion();
-                  });
-                }
+                checkAnswer(false);
               },
             ),
           ),
         ),
-        //แสดงผล icon สำหรับ scoreKeeper
-        Row(
-          children: scoreKeeper,
+        Column(
+          children: [
+            Row(
+              children: [
+                const Text("Current Score: "),
+                Row(
+                  children: scoreKeeper,
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                const Text("Last Score: "),
+                Row(
+                  children: lastScoreKeeper,
+                ),
+                const Expanded(
+                  child: SizedBox(),
+                ),
+                Text("Total: $lastScore"),
+              ],
+            ),
+          ],
         )
       ],
     );
